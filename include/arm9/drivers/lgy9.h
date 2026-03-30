@@ -27,9 +27,16 @@ extern "C"
 {
 #endif
 
-#define LGY9_ARM7_STUB_LOC   (0x3007E00u)
-#define LGY9_ARM7_STUB_LOC9  (AHB_RAM_BASE + 0xBFE00u)
-#define LGY9_SAVE_LOC        (AHB_RAM_BASE + 0x80000u)
+#define LGY9_ARM7_STUB_LOC    (0x3007E00u)
+#define LGY9_ARM7_STUB_LOC9   (AHB_RAM_BASE + 0xBFE00u)
+#define LGY9_SAVE_LOC         (AHB_RAM_BASE + 0x80000u)
+
+// Cheat engine location in GBA IWRAM (after boot stub).
+#define LGY9_CHEAT_ENGINE_LOC  (0x3007E50u)
+#define LGY9_CHEAT_ENGINE_LOC9 (LGY9_ARM7_STUB_LOC9 + 0x50u)
+// Cheat data table (count + entries) in GBA IWRAM.
+#define LGY9_CHEAT_DATA_LOC    (0x3007ED0u)
+#define LGY9_CHEAT_DATA_LOC9   (LGY9_ARM7_STUB_LOC9 + 0xD0u)
 
 
 #define LGY9_REGS_BASE  (IO_AHB_BASE + 0x18000)

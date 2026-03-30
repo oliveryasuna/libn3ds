@@ -79,3 +79,62 @@ _gba_boot_vcount_lp:
 .global _gba_boot_size
 _gba_boot_size = . - _gba_boot
 END_ASM_FUNC
+
+
+@ Cheat engine IRQ handler.
+@ Replaces the BIOS IRQ dispatcher when cheats are active.
+@ Installed at 0x03007E50 in GBA IWRAM via the IRQ vector overlay.
+@ On each VBlank, iterates the cheat table at 0x03007ED0 and applies
+@ constant memory writes, then forwards to the game's IRQ handler.
+.arm
+BEGIN_ASM_FUNC _gba_cheat_irq_handler
+	@ Replicate BIOS IRQ dispatcher entry.
+	stmdb sp!, {r0-r3, r12, lr}
+
+	@ Check if VBlank is pending and enabled.
+	mov   r0, #0x4000000
+	ldrh  r1, [r0, #0x200]       @ REG_IE
+	ldrh  r2, [r0, #0x202]       @ REG_IF
+	ands  r2, r2, r1
+	tstne r2, #1                  @ Bit 0 = VBlank
+	beq   _cheat_call_game
+
+	@ Load cheat table.
+	ldr   r3, =0x03007ED0        @ Cheat data address in IWRAM.
+	ldr   r12, [r3], #4          @ Cheat count.
+	cmp   r12, #0
+	beq   _cheat_call_game
+
+_cheat_loop:
+	ldr   r0, [r3], #4           @ Type (top nibble) + address (bottom 28 bits).
+	ldr   r1, [r3], #4           @ Value.
+	mov   r2, r0, lsr #28        @ Extract type nibble.
+	bic   r0, r0, #0xF0000000    @ Mask to address.
+
+	cmp   r2, #0
+	streqb r1, [r0]              @ Type 0: 8-bit write.
+	beq   _cheat_next
+	cmp   r2, #1
+	streqh r1, [r0]              @ Type 1: 16-bit write.
+	beq   _cheat_next
+	cmp   r2, #2
+	streq r1, [r0]               @ Type 2: 32-bit write.
+
+_cheat_next:
+	subs  r12, r12, #1
+	bne   _cheat_loop
+
+_cheat_call_game:
+	@ Forward to the game's IRQ handler (same as BIOS dispatcher).
+	mov   r0, #0x4000000
+	add   lr, pc, #0
+	ldr   pc, [r0, #-4]          @ Load from 0x03FFFFFC (mirror of 0x03007FFC).
+
+	@ Replicate BIOS IRQ dispatcher exit.
+	ldmia sp!, {r0-r3, r12, lr}
+	subs  pc, lr, #4
+
+.pool
+.global _gba_cheat_irq_handler_size
+_gba_cheat_irq_handler_size = . - _gba_cheat_irq_handler
+END_ASM_FUNC

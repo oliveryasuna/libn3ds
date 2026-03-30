@@ -22,9 +22,13 @@
 #include "fs.h"
 #include "drivers/prng.h"
 #include "drivers/lgy_common.h"
+#include "memory.h"
 #include "debug.h"
 
 
+
+static u32 g_cheatData[LGY_MAX_CHEATS * 2];
+static u32 g_cheatCount = 0;
 
 u32 IPC_handleCmd(u8 cmdId, u32 sendBufs, u32 recvBufs, const u32 *const buf)
 {
@@ -120,6 +124,11 @@ u32 IPC_handleCmd(u8 cmdId, u32 sendBufs, u32 recvBufs, const u32 *const buf)
 			break;
 		case IPC_CMD_ID_MASK(IPC_CMD9_BACKUP_GBA_SAVE):
 			result = LGY_backupGbaSave();
+			break;
+		case IPC_CMD_ID_MASK(IPC_CMD9_SET_GBA_CHEATS):
+			g_cheatCount = buf[2];
+			if(g_cheatCount > LGY_MAX_CHEATS) g_cheatCount = LGY_MAX_CHEATS;
+			if(g_cheatCount > 0) copy32(g_cheatData, (u32*)buf[0], g_cheatCount * 8);
 			break;
 #endif
 

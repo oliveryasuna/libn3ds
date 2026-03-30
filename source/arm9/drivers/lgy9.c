@@ -35,6 +35,10 @@ static u32 g_saveSize = 0;
 static u32 g_saveHash[8] = {0};
 static char g_savePath[512] = {0};
 
+// Cheat data received from ARM11 via IPC. Defined in ipc_handler.c.
+extern u32 g_cheatData[];
+extern u32 g_cheatCount;
+
 
 
 static void setupBiosOverlay(bool directBoot)
@@ -47,6 +51,28 @@ static void setupBiosOverlay(bool directBoot)
 	copy32((u32*)LGY9_ARM7_STUB_LOC9, (u32*)_gba_boot, (u32)_gba_boot_size);
 	if(!directBoot) *_gba_boot_swi_a9_addr = 0x26; // Patch swi 0x01 (RegisterRamReset) to swi 0x26 (HardReset).
 	flushDCacheRange((void*)LGY9_ARM7_STUB_LOC9, (u32)_gba_boot_size);
+
+	// Install cheat engine if cheats were sent via IPC.
+	if(g_cheatCount > 0)
+	{
+		// Copy cheat engine code to IWRAM after the boot stub.
+		copy32((u32*)LGY9_CHEAT_ENGINE_LOC9, (u32*)_gba_cheat_irq_handler, (u32)_gba_cheat_irq_handler_size);
+		flushDCacheRange((void*)LGY9_CHEAT_ENGINE_LOC9, (u32)_gba_cheat_irq_handler_size);
+
+		// Write cheat count + entries to the data region.
+		volatile u32 *dest = (volatile u32*)LGY9_CHEAT_DATA_LOC9;
+		dest[0] = g_cheatCount;
+		for(u32 i = 0; i < g_cheatCount * 2; i++)
+			dest[1 + i] = g_cheatData[i];
+		flushDCacheRange((void*)LGY9_CHEAT_DATA_LOC9, 4 + g_cheatCount * 8);
+
+		// Patch IRQ vector to redirect to cheat engine.
+		// a7_vector[6] (IRQ at 0x18): ldr pc, [pc, #-4] loads from a7_vector[7].
+		// a7_vector[7] (FIQ, unused): holds the cheat engine address.
+		Lgy9 *const lgy9 = getLgy9Regs();
+		lgy9->a7_vector[6] = 0xE51FF004; // ldr pc, [pc, #-4]
+		lgy9->a7_vector[7] = LGY9_CHEAT_ENGINE_LOC;
+	}
 }
 
 static u32 setupSaveType(const u32 saveType)

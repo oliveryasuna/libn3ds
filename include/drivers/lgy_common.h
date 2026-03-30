@@ -31,6 +31,7 @@ extern "C"
 #define LGY_MAX_ROM_SIZE    (1024u * 1024 * 32)
 #define LGY_MAX_SAVE_SIZE   (1024u * 128)
 #define LGY_ROM_LOC         (FCRAM_BASE)
+#define LGY_MAX_CHEATS      (25u)
 
 
 #define LGY_MODE_TWL    (1u)
@@ -92,6 +93,7 @@ Result LGY_prepareGbaMode(bool directBoot, const u32 saveType, const char *const
 Result LGY_setGbaRtc(const GbaRtc rtc);
 Result LGY_getGbaRtc(GbaRtc *const out);
 Result LGY_backupGbaSave(void);
+Result LGY_setGbaCheats(const u32 *cheatData, u32 cheatCount);
 
 #ifdef __cplusplus
 } // extern "C"

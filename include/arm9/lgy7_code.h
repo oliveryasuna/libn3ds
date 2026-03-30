@@ -36,6 +36,10 @@ extern const u32 _gba_vector_overlay_size[];
 extern u8 _gba_boot_swi_a9_addr[]; // "swi 0x01" location in ARM9 address space.
 extern const u32 _gba_boot_size[];
 
+// ARM7 cheat engine IRQ handler for GBA mode.
+[[noreturn]] void _gba_cheat_irq_handler(void);
+extern const u32 _gba_cheat_irq_handler_size[];
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

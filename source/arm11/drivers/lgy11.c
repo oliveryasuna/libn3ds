@@ -148,6 +148,15 @@ void LGY11_switchMode(void)
 	getLgy11Regs()->mode = LGY_MODE_START;
 }
 
+Result LGY_setGbaCheats(const u32 *cheatData, u32 cheatCount)
+{
+	u32 cmdBuf[3];
+	cmdBuf[0] = (u32)cheatData;
+	cmdBuf[1] = cheatCount * 8; // Send buffer size in bytes.
+	cmdBuf[2] = cheatCount;
+	return PXI_sendCmd(IPC_CMD9_SET_GBA_CHEATS, cmdBuf, 3);
+}
+
 void LGY11_deinit(void)
 {
 	LGY_backupGbaSave();

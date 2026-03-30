@@ -73,6 +73,7 @@ typedef enum
 	IPC_CMD9_SET_GBA_RTC     = MAKE_CMD9(0, 0, 2),
 	IPC_CMD9_GET_GBA_RTC     = MAKE_CMD9(0, 1, 0),
 	IPC_CMD9_BACKUP_GBA_SAVE = MAKE_CMD9(0, 0, 0),
+	IPC_CMD9_SET_GBA_CHEATS  = MAKE_CMD9(1, 0, 1),
 
 	// Miscellaneous API.
 	//IPC_CMD9_TEST            = MAKE_CMD9(0, 0, 0),
