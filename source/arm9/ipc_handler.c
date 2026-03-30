@@ -27,8 +27,8 @@
 
 
 
-static u32 g_cheatData[LGY_MAX_CHEATS * 2];
-static u32 g_cheatCount = 0;
+u32 g_cheatData[LGY_MAX_CHEATS * 2];
+u32 g_cheatCount = 0;
 
 u32 IPC_handleCmd(u8 cmdId, u32 sendBufs, u32 recvBufs, const u32 *const buf)
 {

@@ -93,10 +93,12 @@ BEGIN_ASM_FUNC _gba_cheat_irq_handler
 
 	@ Check if VBlank is pending and enabled.
 	mov   r0, #0x4000000
-	ldrh  r1, [r0, #0x200]       @ REG_IE
-	ldrh  r2, [r0, #0x202]       @ REG_IF
+	add   r0, r0, #0x200
+	ldrh  r1, [r0]               @ REG_IE  (0x04000200)
+	ldrh  r2, [r0, #2]           @ REG_IF  (0x04000202)
 	ands  r2, r2, r1
-	tstne r2, #1                  @ Bit 0 = VBlank
+	beq   _cheat_call_game
+	tst   r2, #1                 @ Bit 0 = VBlank
 	beq   _cheat_call_game
 
 	@ Load cheat table.
@@ -112,13 +114,18 @@ _cheat_loop:
 	bic   r0, r0, #0xF0000000    @ Mask to address.
 
 	cmp   r2, #0
-	streqb r1, [r0]              @ Type 0: 8-bit write.
-	beq   _cheat_next
+	bne   _cheat_try16
+	strb  r1, [r0]               @ Type 0: 8-bit write.
+	b     _cheat_next
+_cheat_try16:
 	cmp   r2, #1
-	streqh r1, [r0]              @ Type 1: 16-bit write.
-	beq   _cheat_next
+	bne   _cheat_try32
+	strh  r1, [r0]               @ Type 1: 16-bit write.
+	b     _cheat_next
+_cheat_try32:
 	cmp   r2, #2
-	streq r1, [r0]               @ Type 2: 32-bit write.
+	bne   _cheat_next
+	str   r1, [r0]               @ Type 2: 32-bit write.
 
 _cheat_next:
 	subs  r12, r12, #1
